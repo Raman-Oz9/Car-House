@@ -1,4 +1,10 @@
-"""Beat-synced car montage renderer (music only, no voice, no captions)."""
+"""Beat-synced car montage renderer (music only, no voice, no captions).
+
+Needs: ffmpeg, pip install librosa numpy
+Env:   PEXELS_API_KEY
+Files: music/*.mp3 (royalty-free tracks from YouTube Audio Library)
+Out:   out.mp4 (1080x1920, ~28s) and meta.json (title/description/tags)
+"""
 import glob, json, os, random, subprocess, sys, urllib.parse, urllib.request
 
 import librosa
@@ -31,10 +37,14 @@ def run(cmd):
         raise SystemExit(f"failed: {' '.join(cmd[:4])}")
 
 
+UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+      "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+
+
 def pexels(query, orientation):
     q = urllib.parse.urlencode({"query": query, "orientation": orientation, "per_page": 20})
     req = urllib.request.Request(f"https://api.pexels.com/videos/search?{q}",
-                                 headers={"Authorization": PEXELS_KEY})
+                                 headers={"Authorization": PEXELS_KEY, "User-Agent": UA})
     return json.load(urllib.request.urlopen(req, timeout=30))["videos"]
 
 
@@ -62,7 +72,9 @@ def get_clips(n=16):
         path = f"{WORK}/clip_{cid}.mp4"
         if not os.path.exists(path):
             try:
-                urllib.request.urlretrieve(url, path)
+                dl = urllib.request.Request(url, headers={"User-Agent": UA})
+                with urllib.request.urlopen(dl, timeout=60) as r, open(path, "wb") as f:
+                    f.write(r.read())
             except Exception as e:
                 print("download fail", cid, e)
                 continue
