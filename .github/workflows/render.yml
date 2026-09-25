@@ -3,7 +3,8 @@ name: Render Car House Short
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 16 * * *"   # 5 PM WAT daily
+    - cron: "0 8 * * *"    # 9 AM WAT daily
+    - cron: "0 20 * * *"   # 9 PM WAT daily
 
 permissions:
   contents: write
